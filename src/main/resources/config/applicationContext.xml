@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="gbk"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"  
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context   
+    http://www.springframework.org/schema/context/spring-context.xsd">
+    <!-- -->
+    <context:property-placeholder location="classpath:config/application.properties" />
+	<context:component-scan base-package="holiday.redisTest"/>  
+    
+    <!-- redis -->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig" >
+		<property name="maxTotal" value="${redis.maxTotal}"/>
+		<property name="maxIdle" value="${redis.maxIdle}"/>
+		<property name="maxWaitMillis" value="${redis.maxWaitMillis}" />
+		<property name="minIdle" value="${redis.minIdle}"/>
+		<property name="testOnBorrow" value="${redis.testOnBorrow}" />
+	</bean>
+	
+	<bean id="jedisFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<property name="port" value="${redis.port}"/>
+		<property name="hostName" value="${redis.ip}"/>
+		<property name="poolConfig" >
+			<ref bean="jedisPoolConfig"/>
+		</property>
+		<property name="timeout" value="${redis.timeout}"/>
+	</bean>
+	
+	<bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory">
+			<ref bean="jedisFactory"/>
+		</property>
+	</bean>
+	
+	<bean id="queueClient" class="com.tf56.queue.client.QueueClientImpl">
+		<property name="redisTemplate">
+			<ref bean="redisTemplate"/>
+		</property>
+	</bean>
+	
+	<context:component-scan base-package="tf56.balanceClient.service"/>
+	<import resource="redis-queue.xml"/>
+</beans>
